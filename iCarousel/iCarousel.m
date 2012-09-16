@@ -2099,17 +2099,26 @@ NSComparisonResult compareViewDepth(UIView *view1, UIView *view2, iCarousel *sel
             }
             default:
             {
-                CGFloat translation = (_vertical? [panGesture translationInView:self].y: [panGesture translationInView:self].x) - _previousTranslation;
-                CGFloat factor = 1.0f;
-                if (!_wrapEnabled && _bounces)
+                if ([panGesture locationInView:self.contentView].y > -20)
                 {
-                    factor = 1.0f - fminf(fabsf(_scrollOffset - [self clampedOffset:_scrollOffset]), _bounceDistance) / _bounceDistance;
+                    CGFloat translation = (_vertical? [panGesture translationInView:self].y: [panGesture translationInView:self].x) - _previousTranslation;
+                    CGFloat factor = 1.0f;
+                    if (!_wrapEnabled && _bounces)
+                    {
+                        factor = 1.0f - fminf(fabsf(_scrollOffset - [self clampedOffset:_scrollOffset]), _bounceDistance) / _bounceDistance;
+                    }
+                    
+                    _previousTranslation = _vertical? [panGesture translationInView:self].y: [panGesture translationInView:self].x;
+                    _startVelocity = -(_vertical? [panGesture velocityInView:self].y: [panGesture velocityInView:self].x) * factor * _scrollSpeed / _itemWidth;
+                    _scrollOffset -= translation * factor * _offsetMultiplier / _itemWidth;
+                    [self didScroll];
                 }
-                
-                _previousTranslation = _vertical? [panGesture translationInView:self].y: [panGesture translationInView:self].x;
-                _startVelocity = -(_vertical? [panGesture velocityInView:self].y: [panGesture velocityInView:self].x) * factor * _scrollSpeed / _itemWidth;
-                _scrollOffset -= translation * factor * _offsetMultiplier / _itemWidth;
-                [self didScroll];
+                else
+                {
+                    panGesture.enabled = NO;
+                    [self scrollToItemAtIndex:self.currentItemIndex animated:YES];
+                    panGesture.enabled = YES;
+                }
             }
         }
     }
